@@ -30,11 +30,13 @@ if 'guess_count' not in st.session_state:
 if 'solution' not in st.session_state:
     st.session_state.solution = random.choice(animal_words)  # Pick a random animal noun as the solution
 
-# Function to reset input field
-def submit():
-    # This will clear the input field, without resetting other game states
-    st.session_state.user_input = st.session_state.widget
-    st.session_state.widget = ""  # Clear the widget field after submit
+
+def reset_game():
+    st.session_state.user_input = "" # Clear the user input field
+    st.session_state.guess_count = 0  # Reset guess count
+    st.session_state.solution = random.choice(animal_words)  # Pick a new random animal noun as the solution
+    
+
 
 # Title
 st.title("Guess the Animal")
@@ -49,13 +51,10 @@ if not st.session_state.username:
 else:
     # Display the user's current game state
     st.write(f"Hello, {st.session_state.username}!")
-    st.write(f"Current number of guesses: {st.session_state.guess_count}")
+    st.write(f"Solution: {st.session_state.solution}") # debugging
     
-    # Use a dynamic key for the input widget to avoid duplicate keys
-    user_input_key = f"widget_{st.session_state.username}"
-
     # Input for user guess
-    user_guess = st.text_input("What's your guess?", key=user_input_key, value=st.session_state.user_input, on_change=submit)
+    user_guess = st.text_input("What's your guess?", value=st.session_state.user_input,key="user_input").strip().lower()
 
     # Display the game state
     if user_guess:
@@ -74,13 +73,8 @@ else:
         if user_guess == st.session_state.solution:
             st.success(f"Congratulations {st.session_state.username}! You guessed the word '{st.session_state.solution}' correctly in {st.session_state.guess_count} guesses.")
             # Reset solution and guess count for a new game
-            st.session_state.solution = random.choice(animal_words)
-            st.session_state.guess_count = 0
+            st.balloons()
+
 
     # Button to start a new game
-    if st.button("New Word"):
-        # Start a new game by picking a new word and resetting the guess count
-        st.session_state.solution = random.choice(animal_words)  # Pick a new random animal noun as the solution
-        st.session_state.guess_count = 0  # Reset guess count
-        st.session_state.user_input = ""  # Clear the user input field
-        st.session_state.widget = ""  # Ensure the input field is cleared
+    st.button("New Word",on_click=reset_game)
