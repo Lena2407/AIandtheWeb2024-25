@@ -1,80 +1,127 @@
 import streamlit as st
-import spacy
 import random
+import spacy
+import pandas as pd
+import numpy as np
 
-# Load the language model
-nlp = spacy.load('en_core_web_lg')
+# Load spaCy model
+@st.cache_resource
+def load_nlp():
+    return spacy.load('en_core_web_lg')
 
-# Fetch the animal list
-animal_words = [
-    "dog", "cat", "elephant", "lion", "tiger", "bear", "wolf", "fox", "deer", "rabbit",
-    "cow", "horse", "goat", "sheep", "pig", "monkey", "gorilla", "kangaroo", "zebra", "giraffe",
-    "leopard", "panda", "cheetah", "bison", "squirrel", "otter", "bat", "raccoon", "seal", "whale",
-    "dolphin", "penguin", "owl", "parrot", "sparrow", "pigeon", "eagle", "flamingo", "peacock", "duck",
-    "chicken", "turkey", "frog", "snake", "lizard", "turtle", "crocodile", "alligator", "shark", "salmon",
-    "goldfish", "clownfish", "catfish", "guppy", "swordfish", "marlin", "bass", "trout", "herring", "mackerel",
-    "crab", "lobster", "shrimp", "octopus", "squid", "jellyfish", "starfish", "sea lion", "seahorse", "clam",
-    "bee", "ant", "butterfly", "ladybug", "dragonfly", "mosquito", "wasp", "grasshopper", "cockroach", "fly",
-    "beetle", "praying mantis", "centipede", "scorpion", "spider", "termite", "caterpillar", "firefly", "locust",
-    "kiwi", "toucan", "crow", "raven", "magpie", "stork", "crane", "heron", "woodpecker", "blue jay", "cardinal",
-    "blue whale", "kangaroo rat", "mule", "alpaca", "llama", "poodle", "bulldog", "beagle", "chihuahua", "pug"
+nlp = load_nlp()
+
+# List of nouns to choose from
+nouns = [
+    "cat", "dog", "house", "tree", "book", "car", "phone", "computer",
+    "chair", "table", "bird", "flower", "sun", "moon", "star", "cloud",
+    "mountain", "river", "ocean", "forest"
 ]
 
+def reset():
+    # Reset session state variables (except username)
+    st.session_state.solution = random.choice(nouns)
+    st.session_state.game_won = False
+    st.session_state.guess_count = 0
+    st.session_state.previous_similarities = []
+    
+    # Clear any existing input
+    if 'guess_input' in st.session_state:
+        del st.session_state.guess_input
+
 # Initialize session state variables
-if 'user_input' not in st.session_state:
-    st.session_state.user_input = ""  # Initialize user input
 if 'username' not in st.session_state:
-    st.session_state.username = ""  # Initialize username
-if 'guess_count' not in st.session_state:
-    st.session_state.guess_count = 0  # Initialize guess count
+    st.session_state.username = ""
+
 if 'solution' not in st.session_state:
-    st.session_state.solution = random.choice(animal_words)  # Pick a random animal noun as the solution
-
-
-def reset_game():
-    st.session_state.user_input = "" # Clear the user input field
-    st.session_state.guess_count = 0  # Reset guess count
-    st.session_state.solution = random.choice(animal_words)  # Pick a new random animal noun as the solution
+    st.session_state.solution = random.choice(nouns)
     
+if 'game_won' not in st.session_state:
+    st.session_state.game_won = False
+    
+if 'guess_count' not in st.session_state:
+    st.session_state.guess_count = 0
 
+if 'previous_similarities' not in st.session_state:
+    st.session_state.previous_similarities = []
 
-# Title
-st.title("Guess the Animal")
+def get_similarity_color(similarity):
+    """Returns a color based on similarity score"""
+    if similarity >= 0.7:
+        return "🔥 Very Hot!"
+    elif similarity >= 0.5:
+        return "🌡️ Hot"
+    elif similarity >= 0.3:
+        return "😐 Warm"
+    else:
+        return "❄️ Cold"
 
-# Prompt the user for their username
-if 'username' not in st.session_state or not st.session_state.username:
-    st.session_state.username = st.text_input("Enter your username:", value=st.session_state.username)
+# Title and instructions
+st.title("Word Guessing Game")
 
-# If the user hasn't entered a username, prompt them
+# Prompt the user for their username if not already set
 if not st.session_state.username:
-    st.warning("Please enter your username to start the game.")
-else:
-    # Display the user's current game state
-    st.write(f"Hello, {st.session_state.username}!")
-    st.write(f"Solution: {st.session_state.solution}") # debugging
+    st.session_state.username = st.text_input("Enter your username:", key="username_input")
     
-    # Input for user guess
-    user_guess = st.text_input("What's your guess?", value=st.session_state.user_input,key="user_input").strip().lower()
+    # Prevent further interaction until username is entered
+    if not st.session_state.username:
+        st.warning("Please enter your username to start the game.")
+        st.stop()
 
-    # Display the game state
-    if user_guess:
-        st.session_state.guess_count += 1
+# Greet the user
+st.write(f"Hello, {st.session_state.username}!")
+st.write("Debug - Current solution:", st.session_state.solution)
 
-        # Convert the strings to spaCy Token objects
-        token1 = nlp(user_guess)[0]
-        token2 = nlp(st.session_state.solution)[0]
+# Create a form for input
+with st.form(key='guess_form'):
+    user_guess = st.text_input("Enter your guess:", key="guess_input").lower()
+    submit_button = st.form_submit_button("Submit Guess")
 
-        # Compute and display word similarity
-        similarity = token1.similarity(token2)
-        st.text(f"Similarity score: {similarity:.4f}")
-        st.write(f"Number of guesses: {st.session_state.guess_count}")
+# Handle form submission
+if submit_button and user_guess:
+    st.session_state.guess_count += 1
+    
+    # Compute word similarity
+    token1 = nlp(user_guess)[0]
+    token2 = nlp(st.session_state.solution)[0]
+    similarity = token1.similarity(token2)
+    
+    # Store similarity for tracking progress
+    st.session_state.previous_similarities.append((user_guess, similarity))
+    
+    # Check if guess is correct
+    if user_guess == st.session_state.solution:
+        st.balloons()
+        st.success(f"🎉 Congratulations {st.session_state.username}! You guessed the word '{st.session_state.solution}' in {st.session_state.guess_count} guesses!")
+        st.session_state.game_won = True
+    else:
+        # Display similarity feedback
+        st.write(f"Similarity score: {similarity:.4f}")
+        st.write(f"Guess Count: {st.session_state.guess_count}")
+        st.write(get_similarity_color(similarity))
+        
+        # Show guess history with similarity scores
+        if st.session_state.previous_similarities:
+            st.write("Previous guesses:")
+            history_df = pd.DataFrame(
+                st.session_state.previous_similarities,
+                columns=['Guess', 'Similarity']
+            ).sort_values('Similarity', ascending=False)
+            
+            # Create a styled version of the dataframe
+            def color_similarity(val):
+                """Colors similarity values on a scale from red to green"""
+                color = f'background-color: rgba(0, 255, 0, {val})'
+                return color
+            
+            styled_df = history_df.style.applymap(
+                color_similarity,
+                subset=['Similarity']
+            ).format({'Similarity': '{:.4f}'})
+            
+            st.dataframe(styled_df)
 
-        # Check if the guess is correct
-        if user_guess == st.session_state.solution:
-            st.success(f"Congratulations {st.session_state.username}! You guessed the word '{st.session_state.solution}' correctly in {st.session_state.guess_count} guesses.")
-            # Reset solution and guess count for a new game
-            st.balloons()
 
-
-    # Button to start a new game
-    st.button("New Word",on_click=reset_game)
+# New Game button
+if st.button("New Game"):
+    reset()
