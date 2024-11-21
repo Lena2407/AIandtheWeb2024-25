@@ -91,6 +91,8 @@ if submit_button and user_guess:
     
     # Check if guess is correct
     if user_guess == st.session_state.solution:
+        stats_df = pd.DataFrame({'quantity':st.session_state.guess_count, 'quality': st.session_state.previous_similarities}, index = st.session_state.username)
+        stats_df.to_csv('statistics.csv', mode = 'a')
         st.balloons()
         st.success(f"🎉 Congratulations {st.session_state.username}! You guessed the word '{st.session_state.solution}' in {st.session_state.guess_count} guesses!")
         st.session_state.game_won = True
