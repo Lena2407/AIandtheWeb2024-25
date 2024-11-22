@@ -69,9 +69,9 @@ st.text("Most guessed word: " + str(most_guessed))
 #print(average_quality)
 
 st.subheader("Number of guesses per game")
-#st.bar_chart(scores)
+st.bar_chart(quantity)
 
 st.subheader("Average quality of guesses per game")
-#st.bar_chart(average_quality, x = average_quality.columns, y = average_quality["quality"])
+st.bar_chart(average_quality.T)
 
 
