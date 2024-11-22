@@ -19,7 +19,7 @@ nouns = [
     "mountain", "river", "ocean", "forest"
 ]
 
-score_file_path = 'scoreboard.csv'
+score_file_path = 'statistics.csv'
 
 def reset():
     # Reset session state variables (except username)

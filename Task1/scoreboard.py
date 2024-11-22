@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from itertools import chain
+import ast
+import statistics
 
 #stylize page
 st.set_page_config(layout="wide")
@@ -14,7 +16,7 @@ number = "0"
 #read in the data collected during the games from the csv to later create two dataframes 
 #(one for quantity and one for quality of guesses)
 scores = pd.read_csv('statistics.csv', index_col=0)
-print(scores)
+#print(scores)
 
 #create a dataframe for quantity of guesses
 quantity = pd.DataFrame(scores['quantity'])
@@ -31,20 +33,25 @@ def flatten_chain(matrix):
     return list(chain.from_iterable(matrix))
 
 #create a dataframe for the quality of guesses
-quality = scores['quality']
-quality = quality.to_frame()
+quality = scores['quality'].apply(ast.literal_eval)
+#quality = quality.to_frame(index_col=0)
+print(quality)
 avg_qual = {}
 #get the average quality of guesses per person
 for index, value in quality.items():
-    value = flatten_chain(value)
-    avg_qual[index] = sum(value) / len(value)
-average_quality = pd.DataFrame(avg_qual)
-average_quality.sort_values(['quality'], ascending = False, axis= 0)
+    print(index)
+    print(value)
+    #print(index)
+    #value = flatten_chain(value)
+    print(value)
+    avg_qual[index] = statistics.fmean(value)
+average_quality = pd.DataFrame(avg_qual, index=['quality'])
+average_quality.sort_values(['quality'], ascending = False, axis= 1)
 
 #display the scoreboard for average quality of guesses
 with col2:
     st.subheader("Scoreboard by quality of guesses")
-    st.dataframe(average_quality)
+    st.dataframe(average_quality.T)
 
 #section for further statistics 
 st.header("Further Statistics")
@@ -52,19 +59,20 @@ st.text("Number of Games played: " + number)
 
 st.text("Average number of guesses: ")
 
-words = scores['guesses']
+words = scores['guesses'].apply(ast.literal_eval)
 wordcount = {}
 for word in words.items():
-    if word in wordcount: 
+    print(word)
+    if word in wordcount.keys(): 
         wordcount[word] = int(wordcount[word]) + 1
     else: 
         wordcount[word] = 1
 most_guessed = max(wordcount, key=wordcount.get)
 
-st.text("Most guessed words:")
+st.text("Most guessed word:" + str(most_guessed))
 
-print(quantity)
-print(average_quality)
+#print(quantity)
+#print(average_quality)
 
 st.subheader("Number of guesses per game")
 #st.bar_chart(scores)
