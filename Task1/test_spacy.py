@@ -3,6 +3,7 @@ import random
 import spacy
 import pandas as pd
 import numpy as np
+import os
 
 # Load spaCy model
 @st.cache_resource
@@ -18,12 +19,16 @@ nouns = [
     "mountain", "river", "ocean", "forest"
 ]
 
+score_file_path = 'statistics.csv'
+
 def reset():
     # Reset session state variables (except username)
     st.session_state.solution = random.choice(nouns)
     st.session_state.game_won = False
     st.session_state.guess_count = 0
     st.session_state.previous_similarities = []
+    st.session_state.similarity_count = []
+    st.session_state.guesses = []
     
     # Clear any existing input
     if 'guess_input' in st.session_state:
@@ -44,6 +49,13 @@ if 'guess_count' not in st.session_state:
 
 if 'previous_similarities' not in st.session_state:
     st.session_state.previous_similarities = []
+
+if 'similarity_count' not in st.session_state:
+    st.session_state.similarity_count = []
+
+if 'guesses' not in st.session_state:
+    st.session_state.guesses = []
+
 
 def get_similarity_color(similarity):
     """Returns a color based on similarity score"""
@@ -88,11 +100,14 @@ if submit_button and user_guess:
     
     # Store similarity for tracking progress
     st.session_state.previous_similarities.append((user_guess, similarity))
+    st.session_state.similarity_count.append(similarity)
+    st.session_state.guesses.append(user_guess)
     
     # Check if guess is correct
     if user_guess == st.session_state.solution:
-        stats_df = pd.DataFrame({'quantity':st.session_state.guess_count, 'quality': st.session_state.previous_similarities}, index = st.session_state.username)
-        stats_df.to_csv('statistics.csv', mode = 'a')
+        stats_df = pd.DataFrame({'quantity':st.session_state.guess_count, 'quality': [st.session_state.similarity_count], 'guesses': [st.session_state.guesses]}, index = [st.session_state.username])
+        file_exists = os.path.exists(score_file_path)
+        stats_df.to_csv(score_file_path, mode = 'a', header=not file_exists)
         st.balloons()
         st.success(f"🎉 Congratulations {st.session_state.username}! You guessed the word '{st.session_state.solution}' in {st.session_state.guess_count} guesses!")
         st.session_state.game_won = True
