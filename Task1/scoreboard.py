@@ -13,7 +13,8 @@ number = "0"
 
 #read in the data collected during the games from the csv to later create two dataframes 
 #(one for quantity and one for quality of guesses)
-scores = pd.DataFrame({'Emily': [np.random.randint(1,15), np.random.rand(1,15)], 'Lena': [np.random.randint(1,15), np.random.rand(1,15)], 'Luna':[np.random.randint(1,15), np.random.rand(1,15)]}, index=["quantity","quality"])
+scores = pd.read_csv('statistics.csv', index_col=0)
+print(scores)
 
 #create a dataframe for quantity of guesses
 quantity = pd.DataFrame(scores['quantity'])
@@ -30,7 +31,8 @@ def flatten_chain(matrix):
     return list(chain.from_iterable(matrix))
 
 #create a dataframe for the quality of guesses
-quality =  scores['quality']
+quality = scores['quality']
+quality = quality.to_frame()
 avg_qual = {}
 #get the average quality of guesses per person
 for index, value in quality.items():
@@ -49,6 +51,17 @@ st.header("Further Statistics")
 st.text("Number of Games played: " + number)
 
 st.text("Average number of guesses: ")
+
+words = scores['guesses']
+wordcount = {}
+for word in words.items():
+    if word in wordcount: 
+        wordcount[word] = int(wordcount[word]) + 1
+    else: 
+        wordcount[word] = 1
+most_guessed = max(wordcount, key=wordcount.get)
+
+st.text("Most guessed words:")
 
 print(quantity)
 print(average_quality)
