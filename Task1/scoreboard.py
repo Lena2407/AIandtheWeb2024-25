@@ -11,16 +11,15 @@ st.title("Stats")
 st.header("Scoreboard")
 col1, col2 = st.columns(2)
 
-number = "0"
 
 #read in the data collected during the games from the csv to later create two dataframes 
 #(one for quantity and one for quality of guesses)
 scores = pd.read_csv('statistics.csv', index_col=0)
-#print(scores)
 
 #create a dataframe for quantity of guesses
 quantity = pd.DataFrame(scores['quantity'])
 quantity = quantity.sort_values(['quantity'], axis = 0)
+guesscount = quantity['quantity'].tolist()
 
 #display the quantity scoreboard
 with col1:
@@ -34,16 +33,9 @@ def flatten_chain(matrix):
 
 #create a dataframe for the quality of guesses
 quality = scores['quality'].apply(ast.literal_eval)
-#quality = quality.to_frame(index_col=0)
-print(quality)
 avg_qual = {}
 #get the average quality of guesses per person
 for index, value in quality.items():
-    print(index)
-    print(value)
-    #print(index)
-    #value = flatten_chain(value)
-    print(value)
     avg_qual[index] = statistics.fmean(value)
 average_quality = pd.DataFrame(avg_qual, index=['quality'])
 average_quality.sort_values(['quality'], ascending = False, axis= 1)
@@ -55,21 +47,23 @@ with col2:
 
 #section for further statistics 
 st.header("Further Statistics")
-st.text("Number of Games played: " + number)
+st.text("Number of Games played: " + str(scores.shape[0]))
 
-st.text("Average number of guesses: ")
+st.text("Average number of guesses: " + str(statistics.fmean(guesscount)))
 
-words = scores['guesses'].apply(ast.literal_eval)
+guesses = scores['guesses'].apply(ast.literal_eval)
+print(guesses)
 wordcount = {}
-for word in words.items():
-    print(word)
-    if word in wordcount.keys(): 
-        wordcount[word] = int(wordcount[word]) + 1
-    else: 
-        wordcount[word] = 1
+for index, words in guesses.items():
+    print(words)
+    for word in words: 
+        if word in wordcount.keys(): 
+            wordcount[word] = int(wordcount[word]) + 1
+        else: 
+            wordcount[word] = 1
 most_guessed = max(wordcount, key=wordcount.get)
 
-st.text("Most guessed word:" + str(most_guessed))
+st.text("Most guessed word: " + str(most_guessed))
 
 #print(quantity)
 #print(average_quality)
