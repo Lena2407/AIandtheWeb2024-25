@@ -158,7 +158,7 @@ with col2:
 
     # Function to ask GPT to answer yes/no based on predefined animal
     def ask_llm(question, solution):
-        prompt = f"Answer the following yes/no question based on the word: {solution}.\nQuestion: {question}\nAnswer (Yes/No):"
+        prompt = f"Answer the following yes/no question based on the word: {solution}.\n. If it is not a yes/no question, say: I can only answer yes/no questions. Question: {question}\nAnswer (Yes/No):"
         
         try:
             # Call OpenAI GPT model for answering the question

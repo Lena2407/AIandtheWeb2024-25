@@ -7,6 +7,8 @@ import statistics
 
 #stylize page
 st.set_page_config(layout="wide")
+
+#set page title and header
 st.title("Stats")
 st.header("Scoreboard")
 col1, col2 = st.columns(2)
