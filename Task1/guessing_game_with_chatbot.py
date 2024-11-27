@@ -237,7 +237,7 @@ with col2:
     """
 
     # Add each message to the container
-    for chat in st.session_state.chat_history:
+    for chat in reversed(st.session_state.chat_history):
         msg1 = f"You: {chat['user']}"
         msg2 = f"Bot: {chat['bot']}"
         history_html += f'<div class="message">{msg1}</div>'
