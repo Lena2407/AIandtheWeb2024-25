@@ -249,3 +249,8 @@ with col2:
 
     # Render the scrollable container with messages
     st.markdown(history_html, unsafe_allow_html=True)
+
+
+# show solution button
+if st.button("I give up ☹️"):
+    st.write(f"The solution is: {solution}")
