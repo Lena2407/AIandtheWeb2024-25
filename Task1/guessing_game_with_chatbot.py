@@ -2,7 +2,6 @@ import streamlit as st
 import random
 import spacy
 import pandas as pd
-import numpy as np
 import os
 from openai import OpenAI
 
