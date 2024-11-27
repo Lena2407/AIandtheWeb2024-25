@@ -17,7 +17,11 @@ nlp = load_nlp()
 nouns = [
     "cat", "dog", "house", "tree", "book", "car", "phone", "computer",
     "chair", "table", "bird", "flower", "sun", "moon", "star", "cloud",
-    "mountain", "river", "ocean", "forest"
+    "mountain", "river", "ocean", "forest", "tomato","apple", "jacket", 
+    "airplane", "banana", "guitar", "piano", "violin", "elephant",  "rose", 
+    "shoe", "cake", "cheese", "pizza", "ice cream", "coffee",  "hand", "hat",
+    "snow", "boat", "train", "door", "duck", "fish", "farm", "teacher", "baby", 
+    "doctor", "lemon", "umbrella", "pillow"
 ]
 
 score_file_path = 'statistics.csv'
@@ -30,10 +34,9 @@ def reset():
     st.session_state.previous_similarities = []
     st.session_state.similarity_count = []
     st.session_state.guesses = []
+    st.session_state.chat_history = []  # Clear chat history when resetting
+    st.info("A new word was chosen!")
     
-    # Clear any existing input
-    if 'guess_input' in st.session_state:
-        del st.session_state.guess_input
 
 # Initialize session state variables
 if 'username' not in st.session_state:
@@ -57,20 +60,12 @@ if 'similarity_count' not in st.session_state:
 if 'guesses' not in st.session_state:
     st.session_state.guesses = []
 
+if 'chat_history' not in st.session_state:
+    st.session_state.chat_history = []
 
-def get_similarity_color(similarity):
-    """Returns a color based on similarity score"""
-    if similarity >= 0.7:
-        return "🔥 Very Hot!"
-    elif similarity >= 0.5:
-        return "🌡️ Hot"
-    elif similarity >= 0.3:
-        return "😐 Warm"
-    else:
-        return "❄️ Cold"
 
 # Title and instructions
-st.title("Word Guessing Game")
+st.title("Best Word Guessing Game Ever Seen 😎")
 
 # Prompt the user for their username if not already set
 if not st.session_state.username:
@@ -81,15 +76,13 @@ if not st.session_state.username:
         st.warning("Please enter your username to start the game.")
         st.stop()
 
+st.write(f"Hello, {st.session_state.username}!")
+st.write(f"Welcome to the game. Try to guess the word I'm thinking of by entering your guesses in the left textbox. You can also ask yes/no questions to help you guess the word in the right textbox.")
 
 ############ TWO COLUMNS ###########################################################################
 # Create two columns
 col1, col2 = st.columns(2)
-
 with col1:
-    # Greet the user
-    st.write(f"Hello, {st.session_state.username}!")
-    st.write("Debug - Current solution:", st.session_state.solution)
 
     # Create a form for input
     with st.form(key='guess_form'):
@@ -109,41 +102,67 @@ with col1:
         st.session_state.previous_similarities.append((user_guess, similarity))
         st.session_state.similarity_count.append(similarity)
         st.session_state.guesses.append(user_guess)
+
         
-        # Check if guess is correct
+        # Inside the if condition where the guess is correct
         if user_guess == st.session_state.solution:
-            stats_df = pd.DataFrame({'quantity':st.session_state.guess_count, 'quality': [st.session_state.similarity_count], 'guesses': [st.session_state.guesses]}, index = [st.session_state.username])
+            # Save game stats
+            stats_df = pd.DataFrame({
+                'quantity': [st.session_state.guess_count],
+                'quality': [st.session_state.similarity_count],
+                'guesses': [st.session_state.guesses]
+            }, index=[st.session_state.username])
+            
             file_exists = os.path.exists(score_file_path)
-            stats_df.to_csv(score_file_path, mode = 'a', header=not file_exists)
+            stats_df.to_csv(score_file_path, mode='a', header=not file_exists)
+            
+            # Display success message
             st.balloons()
             st.success(f"🎉 Congratulations {st.session_state.username}! You guessed the word '{st.session_state.solution}' in {st.session_state.guess_count} guesses!")
-            st.session_state.game_won = True
-        else:
-            # Display similarity feedback
-            st.write(f"Similarity score: {similarity:.4f}")
-            st.write(f"Guess Count: {st.session_state.guess_count}")
-            st.write(get_similarity_color(similarity))
             
-            # Show guess history with similarity scores
-            if st.session_state.previous_similarities:
-                st.write("Previous guesses:")
-                history_df = pd.DataFrame(
-                    st.session_state.previous_similarities,
-                    columns=['Guess', 'Similarity']
-                ).sort_values('Similarity', ascending=False)
-                
-                # Create a styled version of the dataframe
-                def color_similarity(val):
-                    """Colors similarity values on a scale from red to green"""
-                    color = f'background-color: rgba(0, 255, 0, {val})'
-                    return color
-                
-                styled_df = history_df.style.applymap(
-                    color_similarity,
-                    subset=['Similarity']
-                ).format({'Similarity': '{:.4f}'})
-                
-                st.dataframe(styled_df)
+            # Reset the game while preserving the username
+            reset()
+
+
+    
+        else:
+            st.warning("Try again!")
+            
+    
+    #st.write("Debug - Current solution:", st.session_state.solution)
+    
+    # Show guess history as a colored table
+    if st.session_state.previous_similarities:
+        st.write("### Guess History")
+        
+        # Create DataFrame for guess history
+        guess_history_df = pd.DataFrame(
+            st.session_state.previous_similarities, 
+            columns=['Guess', 'Similarity']
+        ).sort_values('Similarity', ascending=False)
+        
+        # Style the DataFrame with a color gradient
+        def color_gradient(val):
+            """
+            Creates a color gradient from red (low similarity) to green (high similarity)
+            Uses rgba to allow for transparency
+            """
+            # Normalize the value between 0 and 1
+            normalized = min(max(val, 0), 1)
+            
+            # Red to green gradient
+            red = int(255 * (1 - normalized))
+            green = int(255 * normalized)
+            
+            return f'background-color: rgba({red}, {green}, 0, 0.5)'
+
+        # Apply styling and display
+        styled_df = guess_history_df.style.applymap(
+            color_gradient, 
+            subset=['Similarity']
+        ).format({'Similarity': '{:.4f}'})
+        
+        st.dataframe(styled_df)
 
 
 ############### 2nd Column ##############################################################
@@ -152,7 +171,7 @@ with col2:
     client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
     model = "gpt-4o-mini"
 
-    st.write("You can ask me yes/no questions, that will help you guess the correct word.")
+    #st.write("You can ask me yes/no questions, that will help you guess the correct word.")
 
     solution = st.session_state.solution
 
@@ -183,14 +202,13 @@ with col2:
 
     # Create a form for input
     with st.form(key='chatbot_form'):
-        user_question = st.text_input("You:", key="user_question").lower()
+        user_question = st.text_input("Ask your question:", key="user_question").lower()
         submit_question_button = st.form_submit_button("Submit Question")
 
     # When user submits input
     if user_question and submit_question_button:
             answer_question = ask_llm(user_question, solution)
-            st.session_state["history"].append({"user": user_question, "bot": answer_question})
-            #st.session_state["user_question"] = ""  # Clear input field
+            st.session_state.chat_history.append({"user": user_question, "bot": answer_question})
 
     # Display chat history
     st.write("### Chat History")
@@ -220,7 +238,7 @@ with col2:
     """
 
     # Add each message to the container
-    for chat in st.session_state["history"]:
+    for chat in st.session_state.chat_history:
         msg1 = f"You: {chat['user']}"
         msg2 = f"Bot: {chat['bot']}"
         history_html += f'<div class="message">{msg1}</div>'
@@ -229,10 +247,3 @@ with col2:
 
     # Render the scrollable container with messages
     st.markdown(history_html, unsafe_allow_html=True)
-
-
-
-# New Game button
-if st.button("New Game"):
-    st.session_state["history"] = []
-    reset()
