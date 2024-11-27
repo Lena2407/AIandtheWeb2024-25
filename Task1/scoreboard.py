@@ -50,7 +50,7 @@ average_quality= average_quality.sort_values(['quality'], ascending = False, axi
 
 #display the scoreboard for average quality of guesses
 with col2:
-    st.subheader("Scoreboard by quality of guesses")
+    st.subheader("Scoreboard by average quality of guesses")
     st.dataframe(average_quality.T)
 
 #section for further statistics 
