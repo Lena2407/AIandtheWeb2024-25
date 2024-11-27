@@ -20,7 +20,10 @@ nouns = [
     "airplane", "banana", "guitar", "piano", "violin", "elephant",  "rose", 
     "shoe", "cake", "cheese", "pizza", "ice cream", "coffee",  "hand", "hat",
     "snow", "boat", "train", "door", "duck", "fish", "farm", "teacher", "baby", 
-    "doctor", "lemon", "umbrella", "pillow"
+    "doctor", "lemon", "umbrella", "pillow", "bike", "tea", "arrow", "cookie", 
+    "salad", "drums", "hamster", "mouse", "child", "parent", "school", "university", 
+    "cream", "shampoo", "soap", "avocado", "movie", "cinema", "sweater", "ai", "web"
+
 ]
 
 score_file_path = 'statistics.csv'
