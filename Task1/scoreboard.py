@@ -38,7 +38,7 @@ avg_qual = {}
 for index, value in quality.items():
     avg_qual[index] = statistics.fmean(value)
 average_quality = pd.DataFrame(avg_qual, index=['quality'])
-average_quality.sort_values(['quality'], ascending = False, axis= 1)
+average_quality= average_quality.sort_values(['quality'], ascending = False, axis= 1)
 
 #display the scoreboard for average quality of guesses
 with col2:
@@ -69,9 +69,12 @@ st.text("Most guessed word: " + str(most_guessed))
 #print(average_quality)
 
 st.subheader("Number of guesses per game")
-st.bar_chart(quantity)
+st.bar_chart(quantity, x_label = "Usernames", color = "#9621dd")
 
 st.subheader("Average quality of guesses per game")
-st.bar_chart(average_quality.T)
+st.bar_chart(average_quality.T, x_label = "Usernames", color = "#9621dd")
+
+st.subheader("Most guessed words")
+st.bar_chart(wordcount, color = "#9621dd")
 
 
