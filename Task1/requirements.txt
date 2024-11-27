@@ -1,4 +1,4 @@
-spacy==3.8.2
+spacy
 streamlit
 pandas
 openai
