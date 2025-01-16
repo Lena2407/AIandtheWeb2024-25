@@ -55,3 +55,14 @@ main {
     padding: 20px;
     min-height: 100vh;
 }
+
+.center {
+    color: rgb(148,93,65);
+    text-align: center;
+}
+
+img {
+    position: fixed; 
+    bottom: 0px; 
+    right: 0px;
+}
