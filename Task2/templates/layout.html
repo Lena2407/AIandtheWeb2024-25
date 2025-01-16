@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Simple Search Engine{% endblock %}</title>
+    <!-- Link to external CSS file -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+</head>
+<body>
+    <header>
+        <form method="get" action="{{ url_for('search') }}">
+            <input 
+                type="text" 
+                id="query" 
+                name="query" 
+                placeholder="Search..." 
+                value="{{ request.args.get('query', '') }}" 
+                required>
+            <button type="submit">Search</button>
+        </form>
+    </header>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
+
