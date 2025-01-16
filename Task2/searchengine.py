@@ -7,7 +7,7 @@ can be used with the help of a flask app. To use the search engine the
 following link can be opend. Be aware, that a connection to the wifi of 
 University of Osnabrueck has to be established.
 
-Link: ...
+Link: http://vm150.rz.uni-osnabrueck.de/u015/searchengine.wsgi
 '''
 
 from whoosh.fields import *
