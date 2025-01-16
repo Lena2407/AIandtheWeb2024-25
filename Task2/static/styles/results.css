@@ -1,11 +1,11 @@
 body {
-    background-color: rgb(217, 173, 230); /* Light purple background for the body */
+    background-color: rgba(255,244,226,255); /* Light beige background for the body */
     margin: 0;
     font-family: Arial, sans-serif;
 }
 
 h1 {
-    color: rgb(131, 37, 141); /* Dark purple color for h1 */
+    color: rgb(148,93,65); /* Dark brown color for h1 */
     text-align: center;
     padding: 10px;
 }
@@ -15,7 +15,7 @@ header {
     top: 0;
     left: 0;
     right: 0;
-    background-color: rgb(131, 37, 141); /* Dark purple background for the header */
+    background-color: rgb(200,163,128); /* light brown background for the header */
     padding: 10px 0;
     display: flex;
     justify-content: center;
@@ -38,8 +38,8 @@ header input[type="text"] {
 header button {
     padding: 8px 16px;
     margin-left: 10px;
-    background-color: #007BFF;
-    color: white;
+    background-color: rgb(220,204,172);
+    color: rgb(200,163,128);
     border: none;
     border-radius: 4px;
     font-size: 16px;
@@ -47,7 +47,7 @@ header button {
 }
 
 header button:hover {
-    background-color: #0056b3;
+    background-color: rgb(241,183,16);
 }
 
 main {
