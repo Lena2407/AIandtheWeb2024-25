@@ -15,7 +15,7 @@ Task 2
 ├── indexdir  
 │   ├── MAIN_WRITELOCK  
 │   ├── MAIN_kefjsq64mdi79vd9.seg  
-│   ├──_MAIN_1.toc  
+│   └── _MAIN_1.toc  
 ├── static  
 │   ├── styles  
 │   │   └──styling.css  
