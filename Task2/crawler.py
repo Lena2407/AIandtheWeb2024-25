@@ -7,6 +7,7 @@ using the whoosh library.
 '''
 
 import os
+import sys
 import requests
 from bs4 import BeautifulSoup
 import re
@@ -17,7 +18,36 @@ from whoosh.query import *
 
 TESTURL = 'https://vm009.rz.uos.de/crawl/index.html'
 
-def crawl(start_url):
+def find_sentence_with_term(text, term):
+ 
+    term_index = text.lower().find(term.lower())
+    if term_index == -1:
+        return ""
+
+    # Find start of sentence (go backwards to find previous separator or start of text)
+    start = term_index
+    sentence_separators = '.!?'
+    while start > 0 and text[start-1] not in sentence_separators:
+        start -= 1
+    # Skip leading whitespace
+    while start < len(text) and text[start].isspace():
+        start += 1
+
+    # Find end of sentence (next separator or end of text)
+    end = term_index
+    while end < len(text) and text[end] not in sentence_separators:
+        end += 1
+    if end < len(text):  # include the separator if we found one
+        end += 1
+
+    sentence = text[start:end].strip()
+    # Truncate if too long
+    if len(sentence) > 150:
+        return sentence[:147] + "..."
+    
+    return sentence
+
+def crawl(start_url, search_term=None):
     '''
     Crawls (gets and parses) all the HTML pages on a certain server. 
     Builds an index with the whoosh library, which can be later used 
@@ -25,73 +55,102 @@ def crawl(start_url):
 
     Attributes:
         start_url = a string that is a url, which shall be used to start the search.
+        search_term = optional term to find in content for teaser generation
     '''
-    # the index stores the title, pat, content and a teaser text
-    schema = Schema(title=TEXT(stored=True), path=ID(stored=True), content=TEXT, teaser=TEXT(stored=True))
-    if not os.path.exists("index"):
-        os.mkdir("index")
-    ix = create_in("index", schema)
-    # the writer is used to add entries into the index
+    schema = Schema(title=TEXT(stored=True), path=ID(stored=True), content=TEXT(stored=True), teaser=TEXT(stored=True))
+    if not os.path.exists("indexdir"):
+        os.mkdir("indexdir")
+    ix = create_in("indexdir", schema)
     writer = ix.writer()
-    # list of all the urls that shall be added to the index
     urls = [start_url]
-    # list of all visited urls, to prevent doubled enties
     visited_urls = []
 
     split_url = start_url.split('/')
-    server = split_url[2] # server to search on
-    base_url = split_url[0] + '//' + server # url to server
+    server = split_url[2]
+    base_url = split_url[0] + '//' + server
 
-    url_without_html = '' # url without the HTML page at the end
+    url_without_html = ''
     split_url.pop()
     for part in split_url:
         url_without_html += part + '/'
 
-    # there are still urls to be added to the index
     while len(urls) != 0:
         current_url = urls.pop(0)
         visited_urls.append(current_url)
 
-        # crawl for new url links
-        response = requests.get(current_url, timeout=3)
-        status = response.status_code
-        if status != 200: # status code 200 means everything went well
-            continue
-        # get html content with beautifulsoup4
-        soup = BeautifulSoup(response._content, 'html.parser') 
-        current_title = soup.title.text # title
-        teaser = soup.find('p').text # teaser
-        if len(teaser) > 100:
-            teaser = (teaser[:100] + '..')
+        try:
+            print(f"Processing URL: {current_url}")
+            response = requests.get(current_url, timeout=3)
+            status = response.status_code
+            if status != 200:
+                print(f"Skipping URL due to non-200 status code: {status}")
+                continue
 
-        # add currnet url to index
-        writer.add_document(title=current_title, path=current_url, content=soup.text, teaser=teaser)
-        
-        # find links (urls) in content by searching for <a href="...">Text</a>
-        for link in soup.find_all('a'):
-            url = link['href']
+            soup = BeautifulSoup(response._content, 'html.parser')
+            current_title = soup.title.text if soup.title else ""
 
-            # full url: check if same server with base_url
-            if 'http' in url:
-                if base_url in url:
+            # Collect all textual content
+            all_text = soup.get_text()
+            # Combine content by tags for more granular indexing
+            tag_contents = {
+                'p': " ".join(p.get_text() for p in soup.find_all('p')),
+                'pre': " ".join(pre.get_text() for pre in soup.find_all('pre')),
+                'h1': " ".join(h1.get_text() for h1 in soup.find_all('h1')),
+                'h2': " ".join(h2.get_text() for h2 in soup.find_all('h2')),
+                
+            }
+
+            # Default teaser logic
+            teaser = None
+            if search_term:
+                # Search for the term in each tag's content
+                for tag, content in tag_contents.items():
+                    if search_term.lower() in content.lower():
+                        teaser = find_sentence_with_term(content, search_term)
+                        if teaser:  # If a teaser is found, break
+                            break
+
+                if not teaser:  # Fall back if term not found in any tag
+                    teaser = find_sentence_with_term(all_text, search_term)
+                    if not teaser:
+                        teaser = all_text.split(".")[0].strip()
+                        if len(teaser) > 100:
+                            teaser = teaser[:97] + "..."
+            else:
+                # If no search term is provided, prioritize <p> tags for teaser
+                teaser = tag_contents.get('p', "").split(".")[0].strip()
+                if len(teaser) > 100:
+                    teaser = teaser[:97] + "..."
+
+            print(f"Generated teaser: {teaser}\n")
+            writer.add_document(title=current_title, path=current_url, content=all_text, teaser=teaser)
+
+            for link in soup.find_all('a'):
+                if 'href' not in link.attrs:
+                    continue
+                    
+                url = link['href']
+                if 'http' in url:
+                    if base_url in url and url not in visited_urls:
+                        urls.append(url)
+                elif url.startswith('/'):
+                    url = base_url + url
                     if url not in visited_urls:
                         urls.append(url)
-            # subpage of url starting with '/': add base_url to create working url
-            elif url[0] == '/':
-                url = base_url + url
-                if url not in visited_urls:
-                    urls.append(url)
-            # HTML page: exchange HTML pages
-            elif re.search(r'^[a-z0-9]+\.html$', url): 
-                url = url_without_html + url
-                if url not in visited_urls:
-                    urls.append(url)
-            # none of the above: can not be handled
-            else:
-                print('did not understand url: ', url)
+                elif re.search(r'^[a-z0-9]+\.html$', url):
+                    url = url_without_html + url
+                    if url not in visited_urls:
+                        urls.append(url)
+                else:
+                    print('Did not understand URL:', url)
 
-    # commit entries to index
+        except Exception as e:
+            print(f"Error processing {current_url}: {str(e)}")
+            continue
+
     writer.commit()
+  
+
 
 def main():
     crawl(TESTURL)

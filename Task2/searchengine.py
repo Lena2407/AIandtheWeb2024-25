@@ -54,7 +54,7 @@ def internal_error(exception):
 
 def perform_search(querystring):
     '''
-    Performs a search for the querystring using the indexdir.
+    Performs a search for the querystring using the index.
 
     Attributes:
         querystring: A string of words to search for in the content of the index.
@@ -105,3 +105,6 @@ def perform_search(querystring):
             sorted_dict = {'title': list(sorted_first_key), 'path': list(sorted_second_key), 'teaser': list(sorted_third_key)}
 
         return sorted_dict, len(sorted_dict['title']), querystring, correction
+    
+if __name__ == '__main__':
+    app.run(debug=True)

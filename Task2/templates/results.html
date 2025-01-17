@@ -17,8 +17,10 @@
             </li>
         {% endfor %}
     </ul>
+    <img src="{{url_for('static', filename='logo.jpg')}}"/>
 {% else %}
-    <p>No results found for "{{ real_query }}".</p>
+    <p class = "center" >No results found for "{{ real_query }}".</p>
+    <img src="{{url_for('static', filename='logo.jpg')}}"/>
 {% endif %}
 {% endblock %}
 

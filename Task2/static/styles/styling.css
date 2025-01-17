@@ -38,8 +38,8 @@ header input[type="text"] {
 header button {
     padding: 8px 16px;
     margin-left: 10px;
-    background-color: rgb(220,204,172);
-    color: rgb(200,163,128);
+    background-color: rgb(220,204,172); /* Light beige background for the button */
+    color: rgb(200,163,128); /* Darker beige color for the button */
     border: none;
     border-radius: 4px;
     font-size: 16px;
@@ -47,11 +47,22 @@ header button {
 }
 
 header button:hover {
-    background-color: rgb(241,183,16);
+    background-color: rgb(241,183,16);  /* Yellow color when hovering above button */
 }
 
 main {
     margin-top: 80px; /* Space for the fixed header */
     padding: 20px;
     min-height: 100vh;
+}
+
+.center {
+    color: rgb(148,93,65);
+    text-align: center;
+}
+
+img {
+    position: fixed; /* Image always in bottom right corner*/
+    bottom: 0px; 
+    right: 0px;
 }
