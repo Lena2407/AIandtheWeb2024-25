@@ -12,22 +12,39 @@ Link: http://vm150.rz.uni-osnabrueck.de/u015/searchengine.wsgi
 The files are orderd the following way:
 
 Task 2
+
 ├── indexdir
+
 │   ├── MAIN_WRITELOCK
+
 │   ├── MAIN_kefjsq64mdi79vd9.seg
+
 │   ├──_MAIN_1.toc
+
 ├── static
+
 │   ├── styles
+
 │   │   └──styling.css
+
 │   └── logo.jpg
+
 ├── templates
+
 │   ├── index.html
+
 │   ├── layout.html
+
 │   └── results.html
+
 ├── README.md  
+
 ├── crawler.py
+
 ├── requirements.txt
-├── searchengine.py                                          
+
+├── searchengine.py        
+                                  
 └── searchengine.wsgi
 
 The *indexdir* directory contains the beforehand established index of the whoosh library.
@@ -74,6 +91,8 @@ You can then access the resulting web page at your local machine.
 ## Authors
 
 Brüggemann, Lena 	lenbrueggema@uni-osnabrueck.de 
+
 Döring, Luna 	    ldoering@uni-osnabrueck.de 
+
 Guillou, Emily      eguillou@uni-osnabrueck.de 
 
