@@ -11,7 +11,7 @@ Link: http://vm150.rz.uni-osnabrueck.de/u015/searchengine.wsgi
 ## Description
 The files are orderd the following way:
 
-Task 2
+Task 2   
 ├── indexdir  
 │   ├── MAIN_WRITELOCK  
 │   ├── MAIN_kefjsq64mdi79vd9.seg  
