@@ -4,6 +4,11 @@
 from flask import Flask, request, render_template, jsonify
 import json
 import requests
+import datetime
+from datetime import timedelta
+from better_profanity import profanity
+
+
 
 # Class-based application configuration
 class ConfigClass(object):
@@ -20,7 +25,7 @@ app.app_context().push()  # create an app context before initializing db
 HUB_URL = 'http://localhost:5555'
 HUB_AUTHKEY = '1234567890'
 CHANNEL_AUTHKEY = '0987654321'
-CHANNEL_NAME = "The One and Only Channel"
+CHANNEL_NAME = "The Pet Chat"
 CHANNEL_ENDPOINT = "http://localhost:5001" # don't forget to adjust in the bottom of the file
 CHANNEL_FILE = 'messages.json'
 CHANNEL_TYPE_OF_SERVICE = 'aiweb24:chat'
@@ -66,7 +71,8 @@ def home_page():
     if not check_authorization(request):
         return "Invalid authorization", 400
     # fetch channels from server
-    return jsonify(read_messages())
+    limit_messages()
+    return jsonify(welcome_message())
 
 # POST: Send a message
 @app.route('/', methods=['POST'])
@@ -77,6 +83,7 @@ def send_message():
         return "Invalid authorization", 400
     # check if message is present
     message = request.json
+    message = filter_messages(message)
     if not message:
         return "No message", 400
     if not 'content' in message:
@@ -116,6 +123,51 @@ def save_messages(messages):
     global CHANNEL_FILE
     with open(CHANNEL_FILE, 'w') as f:
         json.dump(messages, f)
+
+def welcome_message():
+    welcome_message = {'content': "Welcome to the Pet Chat. Tell us about your beloved pets!",
+                     'sender': "Pet Chat",
+                     'timestamp': "Before your time",
+                     'extra': None,
+    }
+    messages = read_messages()
+    if len(messages) > 0 and welcome_message == messages[0]:
+        return messages
+    else: 
+        messages.insert(0,welcome_message)
+        return messages
+
+def filter_messages(message):
+    if profanity.contains_profanity(message['content']): 
+        message = {'content': "We don't curse here, darling. Please rephrase or shut it!",
+                    'sender': "LovelyCatLady99",
+                    'timestamp': message['timestamp'],
+        }
+        return message
+    elif "dog" in message['content']:
+        message = {'content': "Hmm, it seems like someone wanted to talk about dogs.... What about cats?",
+                    'sender': "LovelyCatLady99",
+                    'timestamp': message['timestamp'],
+        }
+        return message
+    else: 
+        return message
+
+def limit_messages():
+    messages = read_messages()
+    now = datetime.datetime.now()
+    for i in range(len(messages)):
+        mes_time = datetime.datetime.fromisoformat(messages[i]['timestamp'])
+        if mes_time < now-timedelta(hours=24):
+            print("yeah")
+            deleted = messages.pop(i)
+            print(deleted)
+    save_messages(messages)
+
+
+        
+
+
 
 # Start development web server
 # run flask --app channel.py register
