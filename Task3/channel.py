@@ -124,6 +124,7 @@ def save_messages(messages):
     with open(CHANNEL_FILE, 'w') as f:
         json.dump(messages, f)
 
+#add a welcome message at the beginning of the channel
 def welcome_message():
     welcome_message = {'content': "Welcome to the Pet Chat. Tell us about your beloved pets!",
                      'sender': "Pet Chat",
@@ -137,13 +138,16 @@ def welcome_message():
         messages.insert(0,welcome_message)
         return messages
 
+
 def filter_messages(message):
+    #filter out messages that use profanity and send a reminder that profanity is not allowed
     if profanity.contains_profanity(message['content']): 
         message = {'content': "We don't curse here, darling. Please rephrase or shut it!",
                     'sender': "LovelyCatLady99",
                     'timestamp': message['timestamp'],
         }
         return message
+    #filter out all messages that reference dogs, since the cat lady doesn't like dogs
     elif "dog" in message['content']:
         message = {'content': "Hmm, it seems like someone wanted to talk about dogs.... What about cats?",
                     'sender': "LovelyCatLady99",
@@ -153,15 +157,14 @@ def filter_messages(message):
     else: 
         return message
 
+#delete messages after a day
 def limit_messages():
     messages = read_messages()
     now = datetime.datetime.now()
     for i in range(len(messages)):
         mes_time = datetime.datetime.fromisoformat(messages[i]['timestamp'])
         if mes_time < now-timedelta(hours=24):
-            print("yeah")
-            deleted = messages.pop(i)
-            print(deleted)
+            messages.pop(i)
     save_messages(messages)
 
 
