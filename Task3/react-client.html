@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>React Chat Client</title>
+    <!-- Link to Pico CSS from a CDN -->
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css">
+    <style>
+        /* Ensure full viewport height */
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+        /* Set up a flex container for the body */
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        /* Make main fill remaining space */
+        main {
+            flex: 1;
+        }
+        .message {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .chat-layout {
+            display: flex;
+            height: 100%;
+        }
+        /* styles the sidebar */
+        .sidebar {
+            width: 250px;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+        /*styles the chat area */
+        .chat-area {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+        /* styles the search term results */
+        .highlighted {
+            background-color: yellow;
+            padding: 0 2px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+     <!-- Load React and Babel -->
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+    <script type="text/babel">
+        // authentication key and hub URL
+        const HUB_AUTHKEY = '1234567890';
+        const HUB_URL = 'http://vm146.rz.uos.de/hub';
+
+        // Start of Main App component
+        function App() {
+            
+            const [channels, setChannels] = React.useState([]); // list of channels
+            const [selectedChannel, setSelectedChannel] = React.useState(null); // selected channel
+            const [messages, setMessages] = React.useState([]); // messages in the selected channel
+            const [lastChannelUpdate, setLastChannelUpdate] = React.useState(null); // last channel update time
+            const [sortNewestFirst, setSortNewestFirst] = React.useState(true); //state for message sorting
+            const [chatSearchQuery, setChatSearchQuery] = React.useState('');    // search messages
+            
+            // states for username and message 
+            const [sender, setSender] = React.useState('');
+            const [content, setContent] = React.useState('');
+
+            // Fetch channels function
+            const fetchChannels = () => {
+                // Skip fetching if channels were updated in the last 60 seconds
+                if (lastChannelUpdate && (new Date() - lastChannelUpdate) < 60000) {
+                    return channels;
+                }
+                // Fetch channels from the hub endpoint
+                fetch(`${HUB_URL}/channels`, {
+                    headers: {'Authorization': 'authkey ' + HUB_AUTHKEY}
+                })
+                // check for response status OK
+                .then(response => {
+                    if (!response.ok) throw new Error('Error fetching channels: ' + response.statusText); 
+                    return response.json();
+                })
+                // cehck if chanels exist in the response and updates the states
+                .then(data => {
+                    if (!data.channels) throw new Error('No channels in response');
+                    setChannels(data.channels); // set channels state
+                    setLastChannelUpdate(new Date()); // set last update time
+                })
+                // catch other errors
+                .catch(error => {
+                    alert(error.message); // show error message if fetching fails
+                });
+            };
+
+            // Fetch messages from channel
+            const fetchMessages = (channel) => {
+                fetch(channel.endpoint, {
+                    headers: {'Authorization': 'authkey ' + channel.authkey}
+                })
+                //error handling
+                .then(response => {
+                    if (!response.ok) throw new Error('Error fetching messages: ' + response.statusText);
+                    return response.json();
+                })
+                .then(data => {
+                    setMessages(data); // set messages state
+                })
+                .catch(error => {
+                    alert(error.message); 
+                });
+            };
+
+            // post message function
+            const postMessage = (e) => {
+                e.preventDefault(); //prevent page reload
+                // checks if there is a selected channel, non-empty content, and a sender before posting
+                if (!selectedChannel || !content.trim() || !sender.trim()) return;
+                // create new message object
+                const message = {
+                    content: content,
+                    sender: sender,
+                    timestamp: new Date().toISOString()
+                };
+                // send post request to the selected channel
+                fetch(selectedChannel.endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'authkey ' + selectedChannel.authkey
+                    },
+                    body: JSON.stringify(message)
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Error posting message: ' + response.statusText);
+                    setContent(''); //reset content
+                    fetchMessages(selectedChannel); // refresh messages
+                })
+                .catch(error => {
+                    alert(error.message);
+                });
+            };
+
+            // Load channels on first render
+            React.useEffect(() => {
+                // call fetchChannels function
+                fetchChannels();
+            }, []);
+
+            // effect to update user name in local storage
+            React.useEffect(() => {
+                const savedSender = localStorage.getItem('chatSender');
+                if (savedSender) {
+                    setSender(savedSender); // state to set the sender name if exists
+                }
+            }, []);
+            
+            // effect to update user name in local storage when sender changes
+            React.useEffect(() => {
+                if (sender) {
+                    localStorage.setItem('chatSender', sender);
+                }
+            }, [sender]);
+
+            //set states for selected channel and fetch messages
+            const selectChannel = (channel) => {
+                setSelectedChannel(channel);
+                fetchMessages(channel);
+                setChatSearchQuery('');
+            };
+
+            // Highlight search terms in text
+            const highlightText = (text, query) => {
+                // return text as normal if no query
+                if (!query) return text;
+
+                // split text into parts
+                const regex = new RegExp(`(${query})`, 'gi');
+                const parts = text.split(regex);
+                // return the parts that should be highlighted
+                return parts.map((part, i) => 
+                    regex.test(part) // test if part matches the query
+                    ? <span key={i} className="highlighted">{part}</span> //if so tag the part and mark as highlighted
+                    : part // otherwise return the part as is
+                );
+            };
+
+
+            // get order of messages
+            const getSortedAndFilteredMessages = () => {
+                // function to sort messages by date
+                const sortedMessages = [...messages].sort((a, b) => {
+                    // assign timestamps to compare
+                    const dateA = new Date(a.timestamp);
+                    const dateB = new Date(b.timestamp);
+                    // If sortNewestFirst is true, sort by descending date (newest first)
+                    // If sortNewestFirst is false, sort by ascending date (oldest first)
+                    return sortNewestFirst ? dateB - dateA : dateA - dateB;
+                });
+                
+                // return all sorted messages if no search query
+                if (!chatSearchQuery) {
+                    return sortedMessages;
+                }
+                // if there is a query, only retun messages that contain the search query
+                return sortedMessages.filter(message => 
+                    message.content.toLowerCase().includes(chatSearchQuery.toLowerCase()) ||
+                    message.sender.toLowerCase().includes(chatSearchQuery.toLowerCase())
+                );
+            };
+
+            // Function to count total occurrences of search term in messages
+            const countSearchOccurrences = (messages, query) => {
+                if (!query) return 0;
+                // map the search term to a regex
+                const regex = new RegExp(query, "gi");
+                // reduce messages to counted occurrences
+                return messages.reduce((totalCount, message) => {
+                    // Count occurrences in sender name
+                    const senderMatches = (message.sender.match(regex) || []).length;
+                    // Count occurrences in message content
+                    const contentMatches = (message.content.match(regex) || []).length;
+                    // sum all occurrences
+                    return totalCount + senderMatches + contentMatches; 
+                }, 0);
+            };
+
+            // This part renders the sidebar
+            const renderSidebar = () => (
+                <div className="sidebar">
+                    <h4>Channels</h4>
+                    
+                    <ul>
+                        {channels.map((channel, index) => (
+                            <li key={index}>
+                                <a 
+                                    href="#" 
+                                    onClick={(e) => {
+                                        e.preventDefault(); //prevent page reload
+                                        selectChannel(channel); // select channel on click
+                                    }}
+                                    style={{
+                                        fontWeight: selectedChannel && 
+                                                selectedChannel.endpoint === channel.endpoint 
+                                                ? 'bold' : 'normal'
+                                    }}
+                                >
+                                    {channel.name || channel.endpoint.split('/').pop()}
+                                </a>
+                            </li>
+                        ))}
+                    </ul>
+                    
+                    <button onClick={fetchChannels}>Refresh Channels</button>
+                </div>
+            );
+
+            // This part renders the chat area
+            const renderChatArea = () => {
+                // apply sorting and filtering to messages
+                const filteredMessages = getSortedAndFilteredMessages();
+                // get the count of search term occurrences
+                const matchCount = countSearchOccurrences(filteredMessages, chatSearchQuery); 
+
+                return (
+                    <div className="chat-area">
+                        {selectedChannel ? (
+                            <div>
+                                <h2>{selectedChannel.name || selectedChannel.endpoint.split('/').pop()}</h2>
+                                
+                                {/* container for searching and sorting controls */}
+                                <div className="message-controls" style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "5px" }}>
+                                    <input
+                                        type="text"
+                                        placeholder="Search in chat..."
+                                        value={chatSearchQuery}
+                                        onChange={(e) => setChatSearchQuery(e.target.value)}
+                                        style={{ flexGrow: 1 }}
+                                    />
+                                    
+                                    {/* Change Sorting Button*/}
+                                    <button 
+                                        onClick={() => setSortNewestFirst(!sortNewestFirst)}
+                                        className="secondary"
+                                    >
+                                        {sortNewestFirst ? "Show Oldest First" : "Show Newest First"}
+                                    </button>
+                                </div>
+
+                                {/* Display number of matches */}
+                                {chatSearchQuery && (
+                                    <p style={{ marginBottom: "10px" }}>
+                                        Matches found: <strong>{matchCount}</strong>
+                                    </p>
+                                )}
+
+                                {/* Message form */}
+                                <form onSubmit={postMessage}> 
+                                    <div className="grid">
+                                        <div>
+                                            <label>
+                                                Your Name:
+                                                <input
+                                                    type="text"
+                                                    value={sender}
+                                                    onChange={(e) => setSender(e.target.value)}
+                                                    required
+                                                />
+                                            </label>
+                                        </div>
+                                        <div>
+                                            <label>
+                                                Message:
+                                                <textarea
+                                                    value={content}
+                                                    onChange={(e) => setContent(e.target.value)}
+                                                    required
+                                                />
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <button type="submit">Send Message</button>
+                                </form>
+
+                                {/* Display messages */}
+                                <div className="messages-container">
+                                    {filteredMessages.length === 0 ? (
+                                        <p>{chatSearchQuery ? "No matching messages found." : "No messages in this channel."}</p>
+                                    ) : (
+                                        filteredMessages.map((message, index) => (
+                                            <div 
+                                                key={index} 
+                                                className="message"
+                                                style={{
+                                                    backgroundColor: message.sender.toLowerCase() === sender.toLowerCase() 
+                                                        ? '#e6f7ff' 
+                                                        : '#f1f1f1'
+                                                }}
+                                            >
+                                                <strong>
+                                                    {chatSearchQuery ? 
+                                                        highlightText(message.sender, chatSearchQuery) : 
+                                                        message.sender}
+                                                </strong> 
+                                                ({new Date(message.timestamp).toLocaleString()})<br/>
+                                                {chatSearchQuery ? 
+                                                    highlightText(message.content, chatSearchQuery) : 
+                                                    message.content}
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        ) : (
+                            <div>
+                                <h2>Select a channel</h2>
+                                <p>Choose a channel from the list on the left to view messages.</p>
+                            </div>
+                        )}
+                    </div>
+                );
+            };
+
+
+            // main layout
+            return (
+                <div>
+                    <header>
+                        <h1>React Chat Client</h1>
+                    </header>
+                    <main className="container">
+                        <div className="chat-layout">
+                            {renderSidebar()}
+                            {renderChatArea()}
+                        </div>
+                    </main>
+                    <footer>AI and the Web 2025</footer>
+                </div>
+            );
+        }
+
+          // main code: render the App
+        ReactDOM.render(
+            <App />,
+            document.getElementById('root')
+        );
+    </script>
+</body>
+</html>
