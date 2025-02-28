@@ -1,5 +1,18 @@
-## channel.py - a simple message channel
-##
+'''
+The Pet Chat
+
+A simple messaging channel, where users can post messages with a username. 
+The theme of the Channel is to talk about your beloved pets, exchange knowledge
+or just have fun exchanging funny moments. This is also done by the active bot 
+of the chat, "LovelyCatLady99", who is obsessed with cats but actually avoids
+talks about dogs at all costs. 
+
+Messages send in the Channel are deleted after one day and inapropriate language
+is filtered by default. This also includes messages about dogs, as our CatLady
+once banned the topic. 
+
+Link: Link: http://vm150.rz.uni-osnabrueck.de/u015/channel.wsgi
+'''
 
 from flask import Flask, request, render_template, jsonify
 import json
@@ -82,15 +95,15 @@ def home_page():
     limit_messages()
     return jsonify(welcome_message())
 
-# choose a fitting response (generic or fitting to animal mentioned)
+# choose a fitting response for LovelyCatLady99 (generic or fitting to pet mentioned in previous post)
 def respond_to_post(post):
     post_lower = post.lower()
     for keyword, responses in reactions.items():
-        if keyword in post_lower:
+        if keyword in post_lower: # pet found
             return random.choice(responses)
-    return random.choice(generic_responses)
+    return random.choice(generic_responses) # generic response
 
-# Delaying the Responses of the Bot to make it more realistic
+# Delaying the Responses of LovelyCatLady99 to make it more realistic
 def delayed_bot_response(content):
     delay = random.randint(5, 30)  # Random delay between 5 seconds to 30 seconds
     time.sleep(delay)
@@ -177,7 +190,7 @@ def welcome_message():
         messages.insert(0,welcome_message)
         return messages
 
-
+# filter messages to ensure a respectful exchange on the Channel, and to avoid dog-talk
 def filter_messages(message):
     #filter out messages that use profanity and send a reminder that profanity is not allowed
     if profanity.contains_profanity(message['content']): 
@@ -205,10 +218,6 @@ def limit_messages():
         if mes_time < now-timedelta(hours=24):
             messages.pop(i)
     save_messages(messages)
-
-
-        
-
 
 
 # Start development web server
