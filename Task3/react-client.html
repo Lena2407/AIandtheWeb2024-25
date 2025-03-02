@@ -11,6 +11,7 @@
         html, body {
             height: 100%;
             margin: 0;
+            background-color: #cdbed6;
         }
         /* Set up a flex container for the body */
         body {
@@ -21,14 +22,35 @@
         main {
             flex: 1;
         }
+        h1 {
+            text-align: center;
+        }
+        img {
+            max-width: 5%;
+            margin: 0% 2.5%;
+        }
+        /*styles text*/
+        .textt{
+            color: #050315;
+            text-decoration:none;
+        }
         .message {
             padding: 10px;
             margin-bottom: 10px;
             border-radius: 5px;
+            color: #d3aee8;
         }
         .chat-layout {
             display: flex;
             height: 100%;
+        }
+        /*primary color*/
+        .primary {
+            background-color: #531269;
+        }
+        /*secondary color*/
+        .secondary {
+            background-color: #a599b6;
         }
         /* styles the sidebar */
         .sidebar {
@@ -90,7 +112,7 @@
                     if (!response.ok) throw new Error('Error fetching channels: ' + response.statusText); 
                     return response.json();
                 })
-                // cehck if chanels exist in the response and updates the states
+                // check if channels exist in the response and updates the states
                 .then(data => {
                     if (!data.channels) throw new Error('No channels in response');
                     setChannels(data.channels); // set channels state
@@ -237,12 +259,13 @@
             // This part renders the sidebar
             const renderSidebar = () => (
                 <div className="sidebar">
-                    <h4>Channels</h4>
+                    <h4 className="textt">Channels</h4>
                     
                     <ul>
                         {channels.map((channel, index) => (
-                            <li key={index}>
+                            <li key={index} className ="textt">
                                 <a 
+                                    className ="textt"
                                     href="#" 
                                     onClick={(e) => {
                                         e.preventDefault(); //prevent page reload
@@ -260,7 +283,7 @@
                         ))}
                     </ul>
                     
-                    <button onClick={fetchChannels}>Refresh Channels</button>
+                    <button onClick={fetchChannels} className="secondary">Refresh Channels</button>
                 </div>
             );
 
@@ -275,7 +298,7 @@
                     <div className="chat-area">
                         {selectedChannel ? (
                             <div>
-                                <h2>{selectedChannel.name || selectedChannel.endpoint.split('/').pop()}</h2>
+                                <h2 className="textt">{selectedChannel.name || selectedChannel.endpoint.split('/').pop()}</h2>
                                 
                                 {/* container for searching and sorting controls */}
                                 <div className="message-controls" style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "5px" }}>
@@ -285,6 +308,7 @@
                                         value={chatSearchQuery}
                                         onChange={(e) => setChatSearchQuery(e.target.value)}
                                         style={{ flexGrow: 1 }}
+                                        className="primary"
                                     />
                                     
                                     {/* Change Sorting Button*/}
@@ -298,7 +322,7 @@
 
                                 {/* Display number of matches */}
                                 {chatSearchQuery && (
-                                    <p style={{ marginBottom: "10px" }}>
+                                    <p style={{ marginBottom: "10px" }} className="textt">
                                         Matches found: <strong>{matchCount}</strong>
                                     </p>
                                 )}
@@ -307,34 +331,36 @@
                                 <form onSubmit={postMessage}> 
                                     <div className="grid">
                                         <div>
-                                            <label>
+                                            <label className="textt">
                                                 Your Name:
                                                 <input
                                                     type="text"
                                                     value={sender}
                                                     onChange={(e) => setSender(e.target.value)}
                                                     required
+                                                    className="primary"
                                                 />
                                             </label>
                                         </div>
                                         <div>
-                                            <label>
+                                            <label className="textt">
                                                 Message:
                                                 <textarea
                                                     value={content}
                                                     onChange={(e) => setContent(e.target.value)}
                                                     required
+                                                    className="primary"
                                                 />
                                             </label>
                                         </div>
                                     </div>
-                                    <button type="submit">Send Message</button>
+                                    <button type="submit" className="secondary">Send Message</button>
                                 </form>
 
                                 {/* Display messages */}
                                 <div className="messages-container">
                                     {filteredMessages.length === 0 ? (
-                                        <p>{chatSearchQuery ? "No matching messages found." : "No messages in this channel."}</p>
+                                        <p className="textt">{chatSearchQuery ? "No matching messages found." : "No messages in this channel."}</p>
                                     ) : (
                                         filteredMessages.map((message, index) => (
                                             <div 
@@ -362,8 +388,8 @@
                             </div>
                         ) : (
                             <div>
-                                <h2>Select a channel</h2>
-                                <p>Choose a channel from the list on the left to view messages.</p>
+                                <h2 className="textt">Select a channel</h2>
+                                <p className="textt">Choose a channel from the list on the left to view messages.</p>
                             </div>
                         )}
                     </div>
@@ -375,7 +401,15 @@
             return (
                 <div>
                     <header>
-                        <h1>React Chat Client</h1>
+                        <h1 className="textt">
+                            <img src="static\blue.png"/>
+                            <img src="static\green.png"/>
+                            <img src="static\lila.png"/>
+                            React Chat Client
+                            <img src="static\purple.png"/>
+                            <img src="static\red.png"/>
+                            <img src="static\yello2.png"/>
+                        </h1>
                     </header>
                     <main className="container">
                         <div className="chat-layout">
@@ -383,7 +417,7 @@
                             {renderChatArea()}
                         </div>
                     </main>
-                    <footer>AI and the Web 2025</footer>
+                    <footer className="textt">AI and the Web 2025</footer>
                 </div>
             );
         }
