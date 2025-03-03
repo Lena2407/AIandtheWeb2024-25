@@ -11,7 +11,7 @@ Messages send in the Channel are deleted after one day and inapropriate language
 is filtered by default. This also includes messages about dogs, as our CatLady
 once banned the topic. 
 
-Link: Link: http://vm150.rz.uni-osnabrueck.de/u015/channel.wsgi
+Link: Link: http://vm146.rz.uni-osnabrueck.de/u015/channel.wsgi
 '''
 
 from flask import Flask, request, render_template, jsonify
@@ -37,11 +37,21 @@ app = Flask(__name__)
 app.config.from_object(__name__ + '.ConfigClass')  # configuration
 app.app_context().push()  # create an app context before initializing db
 
-HUB_URL = 'http://localhost:5555'
-HUB_AUTHKEY = '1234567890'
-CHANNEL_AUTHKEY = '0987654321'
+# HUB_URL = 'http://localhost:5555'
+# HUB_AUTHKEY = '1234567890'
+# CHANNEL_AUTHKEY = '0987654321'
+# CHANNEL_NAME = "The Pet Chat"
+# CHANNEL_ENDPOINT = "http://localhost:5001" # don't forget to adjust in the bottom of the file/next row
+# PORT = 5001
+# CHANNEL_FILE = 'messages.json'
+# CHANNEL_TYPE_OF_SERVICE = 'aiweb24:chat'
+
+HUB_URL = 'http://vm146.rz.uni-osnabrueck.de/hub'
+HUB_AUTHKEY = 'Crr-K24d-2N'
+CHANNEL_AUTHKEY = '4aRvJEw2Rg'
 CHANNEL_NAME = "The Pet Chat"
-CHANNEL_ENDPOINT = "http://localhost:5001" # don't forget to adjust in the bottom of the file
+CHANNEL_ENDPOINT = "http://vm146.rz.uni-osnabrueck.de/u015/channel.wsgi" # don't forget to adjust in the bottom of the file/next row
+PORT = 5001
 CHANNEL_FILE = 'messages.json'
 CHANNEL_TYPE_OF_SERVICE = 'aiweb24:chat'
 
@@ -225,4 +235,4 @@ def limit_messages():
 # to register channel with hub
 
 if __name__ == '__main__':
-    app.run(port=5001, debug=True)
+    app.run(port=PORT, debug=True)
