@@ -5,13 +5,21 @@ A simple messaging channel, where users can post messages with a username.
 The theme of the Channel is to talk about your beloved pets, exchange knowledge
 or just have fun exchanging funny moments. This is also done by the active bot 
 of the chat, "LovelyCatLady99", who is obsessed with cats but actually avoids
-talks about dogs at all costs. 
+talks about dogs at all costs (she actually manipulated the chat, so that nobody 
+is able to use the word dog at all!!). Additionally be aware, that our CatLady-Bot 
+sometimes takes a few seconds to answer (5-30s), this is intended to make her style 
+more realistic, as it is not easy to chat and take care of your beloved cat at the 
+same time ;)
+
+The Chat-Bot answers in a Keyword-Matching Style. When a known pet-keyword is found,
+the Bot answers accordingly, otherwise generic answers are posted.
 
 Messages send in the Channel are deleted after one day and inapropriate language
 is filtered by default. This also includes messages about dogs, as our CatLady
 once banned the topic. 
 
-Link: Link: http://vm146.rz.uni-osnabrueck.de/u015/channel.wsgi
+*Channel* without our wonderful client: http://vm146.rz.uni-osnabrueck.de/client/show?channel=http://vm322.rz.uni-osnabrueck.de/u015/channel.wsgi
+Hub with our wonderful *Client*: http://vm322.rz.uni-osnabrueck.de/u015/react-client.html
 '''
 
 from flask import Flask, request, render_template, jsonify
@@ -50,9 +58,9 @@ app.app_context().push()  # create an app context before initializing db
 # deployment
 HUB_URL = 'http://vm146.rz.uni-osnabrueck.de/hub'
 HUB_AUTHKEY = 'Crr-K24d-2N'
-CHANNEL_AUTHKEY = '0987654321' # 0987654321 or # 4aRvJEw2Rg
+CHANNEL_AUTHKEY = '0987654321' 
 CHANNEL_NAME = "The Pet Chat"
-CHANNEL_ENDPOINT = "http://vm146.rz.uni-osnabrueck.de/u015/channel.wsgi" # don't forget to adjust in the bottom of the file/next row
+CHANNEL_ENDPOINT = "http://vm322.rz.uni-osnabrueck.de/u015/channel.wsgi" 
 PORT = 5001
 CHANNEL_FILE = 'messages.json'
 CHANNEL_TYPE_OF_SERVICE = 'aiweb24:chat'
@@ -107,11 +115,11 @@ def home_page():
     limit_messages()
     return jsonify(welcome_message())
 
-# choose a fitting response for LovelyCatLady99 (generic or fitting to pet mentioned in previous post)
+# choose a fitting response for LovelyCatLady99 (generic or fitting to pet-keyword mentioned in previous post)
 def respond_to_post(post):
     post_lower = post.lower()
     for keyword, responses in reactions.items():
-        if keyword in post_lower: # pet found
+        if keyword in post_lower: # pet-keyword found
             return random.choice(responses)
     return random.choice(generic_responses) # generic response
 

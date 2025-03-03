@@ -41,7 +41,7 @@ db.create_all()  # create database if necessary
 
 # deployment
 SERVER_AUTHKEY = 'Crr-K24d-2N'
-STANDARD_CLIENT_URL = 'http://localhost:5005' # standard configuration in client.py, chang to real URL if necessary
+STANDARD_CLIENT_URL = 'http://vm322.rz.uni-osnabrueck.de/u015/channel.wsgi' # standard configuration in client.py, chang to real URL if necessary
 
 def health_check(endpoint, authkey):
     # make GET request to URL
