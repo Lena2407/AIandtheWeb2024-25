@@ -2,6 +2,16 @@
 
 AI & the Web, winter term 2024/2025
 
+## Important Notes
+
+After deploying, we receive an error message, when we post a new message into our channel:
+
+JSON.parse: unexpected character at line 1 column 1 of the JSON data
+
+We could not identify the reason.
+
+
+
 ## Running the code on your development server
 
 1. Create and activate a virtual environment, install everything from requirements.txt
