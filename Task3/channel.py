@@ -37,18 +37,20 @@ app = Flask(__name__)
 app.config.from_object(__name__ + '.ConfigClass')  # configuration
 app.app_context().push()  # create an app context before initializing db
 
+# local testing
 # HUB_URL = 'http://localhost:5555'
 # HUB_AUTHKEY = '1234567890'
-# CHANNEL_AUTHKEY = '0987654321'
+# CHANNEL_AUTHKEY = '0987654321' 
 # CHANNEL_NAME = "The Pet Chat"
 # CHANNEL_ENDPOINT = "http://localhost:5001" # don't forget to adjust in the bottom of the file/next row
 # PORT = 5001
 # CHANNEL_FILE = 'messages.json'
 # CHANNEL_TYPE_OF_SERVICE = 'aiweb24:chat'
 
+# deployment
 HUB_URL = 'http://vm146.rz.uni-osnabrueck.de/hub'
 HUB_AUTHKEY = 'Crr-K24d-2N'
-CHANNEL_AUTHKEY = '4aRvJEw2Rg'
+CHANNEL_AUTHKEY = '0987654321' # 0987654321 or # 4aRvJEw2Rg
 CHANNEL_NAME = "The Pet Chat"
 CHANNEL_ENDPOINT = "http://vm146.rz.uni-osnabrueck.de/u015/channel.wsgi" # don't forget to adjust in the bottom of the file/next row
 PORT = 5001
@@ -223,11 +225,9 @@ def filter_messages(message):
 def limit_messages():
     messages = read_messages()
     now = datetime.datetime.now()
-    for i in range(len(messages)):
-        mes_time = datetime.datetime.fromisoformat(messages[i]['timestamp'])
-        if mes_time < now-timedelta(hours=24):
-            messages.pop(i)
-    save_messages(messages)
+    # Keep only messages from the last 24 hours
+    messages = [msg for msg in messages if datetime.datetime.fromisoformat(msg['timestamp']) >= now - timedelta(hours=24)]
+    save_messages(messages)  # Save the filtered messages
 
 
 # Start development web server

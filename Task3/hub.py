@@ -35,8 +35,13 @@ app.app_context().push()  # create an app context before initializing db
 db.init_app(app)  # initialize database
 db.create_all()  # create database if necessary
 
+# local testing
+# SERVER_AUTHKEY = '1234567890'
+# STANDARD_CLIENT_URL = 'http://localhost:5005' # standard configuration in client.py, chang to real URL if necessary
+
+# deployment
 SERVER_AUTHKEY = 'Crr-K24d-2N'
-STANDARD_CLIENT_URL = 'http://vm146.rz.uni-osnabrueck.de/hub' # standard configuration in client.py, chang to real URL if necessary
+STANDARD_CLIENT_URL = 'http://localhost:5005' # standard configuration in client.py, chang to real URL if necessary
 
 def health_check(endpoint, authkey):
     # make GET request to URL
